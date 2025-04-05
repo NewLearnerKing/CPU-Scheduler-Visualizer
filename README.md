@@ -11,7 +11,7 @@ CPU Scheduler Visualizer is an interactive web-based tool designed to help stude
   - Shortest Job First (SJF)
   - Shortest Remaining Time First (SRTF)
   - Round Robin (RR)
-- **Custom Process Creation**: Add and remove processes with specific arrival and burst times
+- **Custom Process Creation**: Add processes with specific arrival and burst times
 - **Adjustable Simulation Speed**: Control how fast the visualization runs
 - **Real-time Metrics**: View essential performance metrics including:
   - Average Completion Time
@@ -26,7 +26,7 @@ CPU Scheduler Visualizer is an interactive web-based tool designed to help stude
 
 1. **Open the application** by launching `index.html` in any modern web browser
 2. **Select an algorithm** using the buttons on the left panel
-3. **Add processes** by specifying arrival time and burst time, then clicking "Add Process"
+3. **Add processes** by specifying arrival time and burst time
 4. **Adjust time quantum** for Round Robin algorithm (when selected)
 5. **Start the simulation** by clicking the "Start Simulation" button
 6. **Control simulation speed** using the slider above the Gantt chart
@@ -57,7 +57,6 @@ An algorithm designed for time-sharing systems. Each process is assigned a fixed
 
 - Any modern web browser (Chrome, Firefox, Safari, Edge)
 - No server or special software installation required
-
 
 ## Educational Value
 

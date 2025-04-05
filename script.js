@@ -379,7 +379,7 @@ function resetGanttChart() {
             <p>Add processes and run the simulation to see the Gantt chart</p>
         </div>
     `;
-    document.getElementById('timeline').innerHTML = '';
+    document.getElementById('timeline-container').innerHTML = '';
     document.getElementById('avg-metrics').innerHTML = '<p>No data yet. Run the simulation to see results.</p>';
     resetResultsTable();
     toggleEmptyState();
@@ -720,16 +720,16 @@ function mergeAdjacentBlocks(ganttData) {
 // Animate the Gantt chart
 function animateGanttChart(ganttData) {
     const ganttChart = document.getElementById('gantt-chart');
-    const timeline = document.getElementById('timeline');
+    const timelineContainer = document.getElementById('timeline-container');
     
     // Clear existing content
     ganttChart.innerHTML = '';
-    timeline.innerHTML = '';
+    timelineContainer.innerHTML = '';
     
     // Find the maximum end time for scaling
     const maxTime = Math.max(...ganttData.map(d => d.endTime));
     
-    // Create timeline markers with more precise intervals and better spacing
+    // Determine appropriate interval based on total duration
     let timeInterval;
     if (maxTime <= 10) {
         timeInterval = 1; // 1 unit intervals for small charts
@@ -737,22 +737,28 @@ function animateGanttChart(ganttData) {
         timeInterval = 2; // 2 unit intervals for medium charts
     } else if (maxTime <= 100) {
         timeInterval = 5; // 5 unit intervals for larger charts
-    } else {
+    } else if (maxTime <= 200) {
         timeInterval = 10; // 10 unit intervals for very large charts
+    } else {
+        timeInterval = 20; // 20 unit intervals for extremely large charts
     }
     
+    // Create appropriate timeline markers with even spacing
     for (let t = 0; t <= maxTime; t += timeInterval) {
+        // Calculate position as percentage
+        const position = (t / maxTime) * 100;
+        
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
-        marker.style.left = `${(t / maxTime) * 100}%`;
+        marker.style.left = `${position}%`;
         
         const label = document.createElement('div');
         label.className = 'timeline-label';
-        label.style.left = `${(t / maxTime) * 100}%`;
+        label.style.left = `${position}%`;
         label.textContent = t;
         
-        timeline.appendChild(marker);
-        timeline.appendChild(label);
+        timelineContainer.appendChild(marker);
+        timelineContainer.appendChild(label);
     }
     
     // Add vertical grid lines for better readability
