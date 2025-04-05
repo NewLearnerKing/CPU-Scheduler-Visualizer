@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduler Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-microchip"></i>
+            <h1>CPU Scheduler Visualizer</h1>
+        </div>
+        <div class="theme-toggle">
+            <i class="fas fa-moon"></i>
+            <span class="slider round"></span>
+            <i class="fas fa-sun"></i>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="intro">
+                <h2>Interactive CPU Scheduling Algorithms</h2>
+                <p>Visualize and understand how different CPU scheduling algorithms work in operating systems. Add processes, adjust their parameters, and see the scheduling in action!</p>
+            </section>
+
+            <div class="control-panel">
+                <div class="algorithm-selector">
+                    <h3>Select Algorithm</h3>
+                    <div class="algorithm-buttons">
+                        <button id="fcfs-btn" class="active">FCFS</button>
+                        <button id="sjf-btn">SJF</button>
+                        <button id="srtf-btn">SRTF</button>
+                        <button id="rr-btn">Round Robin</button>
+                    </div>
+                    <div id="algorithm-info" class="algorithm-info">
+                        <h4>First-Come, First-Served (FCFS)</h4>
+                        <p>Processes are executed in the order they arrive in the ready queue. It's simple but can lead to the convoy effect.</p>
+                    </div>
+                </div>
+
+                <div class="process-panel">
+                    <h3>Processes</h3>
+                    <div class="add-process">
+                        <div class="process-input">
+                            <label for="arrival-time">Arrival Time</label>
+                            <input type="number" id="arrival-time" min="0" value="0" step="1">
+                        </div>
+                        <div class="process-input">
+                            <label for="burst-time">Burst Time</label>
+                            <input type="number" id="burst-time" min="1" value="4" step="1">
+                        </div>
+                        <button id="add-process-btn"><i class="fas fa-plus"></i> Add Process</button>
+                    </div>
+                    <div id="quantum-container" class="hidden">
+                        <label for="time-quantum">Time Quantum:</label>
+                        <input type="number" id="time-quantum" min="1" value="2" step="1">
+                    </div>
+                    <div class="process-list">
+                        <table id="process-table">
+                            <thead>
+                                <tr>
+                                    <th>Process</th>
+                                    <th>Arrival Time</th>
+                                    <th>Burst Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="process-table-body">
+                                <!-- Process rows will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="buttons">
+                        <button id="start-btn" class="primary"><i class="fas fa-play"></i> Start Simulation</button>
+                        <button id="reset-btn"><i class="fas fa-redo"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <section class="visualization">
+                <h3>Gantt Chart</h3>
+                <div class="speed-control">
+                    <label for="simulation-speed">Simulation Speed:</label>
+                    <input type="range" id="simulation-speed" min="1" max="10" value="5">
+                </div>
+                <div id="gantt-chart" class="gantt-chart">
+                    <!-- Gantt chart will be rendered here -->
+                </div>
+                <div id="timeline" class="timeline">
+                    <!-- Timeline will be rendered here -->
+                </div>
+            </section>
+
+            <section class="results">
+                <h3>Results</h3>
+                <div class="metrics-container">
+                    <div class="metrics">
+                        <h4>Average Metrics</h4>
+                        <div id="avg-metrics">
+                            <p>No data yet. Run the simulation to see results.</p>
+                        </div>
+                    </div>
+                    <div class="process-metrics">
+                        <h4>Process Metrics</h4>
+                        <table id="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Process</th>
+                                    <th>Completion Time</th>
+                                    <th>Turnaround Time</th>
+                                    <th>Waiting Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-table-body">
+                                <!-- Results will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="information">
+                <h3>About CPU Scheduling</h3>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <h4>What is CPU Scheduling?</h4>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p>CPU scheduling is the process of determining which process in the ready queue gets the CPU time. The scheduler is the component of the operating system that makes this decision. Scheduling algorithms aim to maximize CPU utilization, throughput, and minimize waiting time, response time, and turnaround time.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <h4>Common Metrics</h4>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <ul>
+                                <li><strong>Completion Time (CT):</strong> Time at which a process completes execution</li>
+                                <li><strong>Turnaround Time (TAT):</strong> Total time taken from submission to completion (CT - AT)</li>
+                                <li><strong>Waiting Time (WT):</strong> Time a process waits in the ready queue (TAT - BT)</li>
+                                <li><strong>Response Time:</strong> Time from submission until the first response</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <h4>Algorithms Explained</h4>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="algorithm-explanation">
+                                <h5>First-Come, First-Served (FCFS)</h5>
+                                <p>The simplest scheduling algorithm. Processes are executed in the order they arrive. Its main drawback is the convoy effect, where small processes wait behind a large process.</p>
+                            </div>
+                            <div class="algorithm-explanation">
+                                <h5>Shortest Job First (SJF)</h5>
+                                <p>A non-preemptive algorithm that selects the process with the smallest burst time. It's optimal for minimizing average waiting time but requires knowing burst times in advance.</p>
+                            </div>
+                            <div class="algorithm-explanation">
+                                <h5>Shortest Remaining Time First (SRTF)</h5>
+                                <p>A preemptive version of SJF. The process with the smallest remaining time is executed next. If a new process arrives with a smaller burst time, the current process is preempted.</p>
+                            </div>
+                            <div class="algorithm-explanation">
+                                <h5>Round Robin (RR)</h5>
+                                <p>Each process is assigned a fixed time slot called a quantum. After a process executes for the time quantum, it's preempted and added to the end of the ready queue. It's good for time-sharing systems but performance depends on the quantum size.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>CPU Scheduler Visualizer - An interactive tool for understanding CPU scheduling algorithms</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
