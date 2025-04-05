@@ -47,12 +47,20 @@
                     <h3>Processes</h3>
                     <div class="add-process">
                         <div class="process-input">
+                            <label for="process-id">Process ID (optional)</label>
+                            <input type="text" id="process-id" placeholder="Auto-generated if empty">
+                        </div>
+                        <div class="process-input">
                             <label for="arrival-time">Arrival Time</label>
                             <input type="number" id="arrival-time" min="0" value="0" step="1">
                         </div>
                         <div class="process-input">
                             <label for="burst-time">Burst Time</label>
                             <input type="number" id="burst-time" min="1" value="4" step="1">
+                        </div>
+                        <div class="process-input">
+                            <label for="process-color">Color (optional)</label>
+                            <input type="color" id="process-color" value="#4a6fa5">
                         </div>
                         <button id="add-process-btn"><i class="fas fa-plus"></i> Add Process</button>
                     </div>
@@ -67,13 +75,20 @@
                                     <th>Process</th>
                                     <th>Arrival Time</th>
                                     <th>Burst Time</th>
-                                    <th>Action</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="process-table-body">
                                 <!-- Process rows will be added here -->
                             </tbody>
                         </table>
+                        <div class="empty-state-message" id="empty-processes-message">
+                            <i class="fas fa-info-circle"></i>
+                            <p>No processes added. Add at least one process to start the simulation.</p>
+                        </div>
+                    </div>
+                    <div class="process-controls">
+                        <button id="clear-all-btn" title="Clear All Processes"><i class="fas fa-trash"></i> Clear All</button>
                     </div>
                     <div class="buttons">
                         <button id="start-btn" class="primary"><i class="fas fa-play"></i> Start Simulation</button>
@@ -87,12 +102,19 @@
                 <div class="speed-control">
                     <label for="simulation-speed">Simulation Speed:</label>
                     <input type="range" id="simulation-speed" min="1" max="10" value="5">
+                    <span id="speed-value">Medium</span>
                 </div>
-                <div id="gantt-chart" class="gantt-chart">
-                    <!-- Gantt chart will be rendered here -->
-                </div>
-                <div id="timeline" class="timeline">
-                    <!-- Timeline will be rendered here -->
+                <div class="visualization-container">
+                    <div id="gantt-chart" class="gantt-chart">
+                        <!-- Gantt chart will be rendered here -->
+                        <div class="empty-state-message" id="empty-gantt-message">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>Add processes and run the simulation to see the Gantt chart</p>
+                        </div>
+                    </div>
+                    <div id="timeline" class="timeline">
+                        <!-- Timeline will be rendered here -->
+                    </div>
                 </div>
             </section>
 
@@ -120,6 +142,10 @@
                                 <!-- Results will be added here -->
                             </tbody>
                         </table>
+                        <div class="empty-state-message" id="empty-results-message">
+                            <i class="fas fa-table"></i>
+                            <p>Run the simulation to see process metrics</p>
+                        </div>
                     </div>
                 </div>
             </section>

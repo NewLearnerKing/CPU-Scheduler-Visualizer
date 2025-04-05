@@ -4,9 +4,9 @@
 class Process {
     constructor(pid, at, bt) {
         this.pid = pid;             // Process ID
-        this.at = parseFloat(at);   // Arrival Time
-        this.bt = parseFloat(bt);   // Burst Time
-        this.rt = parseFloat(bt);   // Remaining Time
+        this.at = parseInt(at);     // Arrival Time - restrict to whole numbers
+        this.bt = parseInt(bt);     // Burst Time - restrict to whole numbers
+        this.rt = parseInt(bt);     // Remaining Time
         this.ct = 0;               // Completion Time
         this.tat = 0;              // Turnaround Time
         this.wt = 0;               // Waiting Time
@@ -55,12 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up event listeners
     setupEventListeners();
     
-    // Add some initial processes for demo purposes
-    addProcess(0, 6);
-    addProcess(2, 4);
-    addProcess(4, 8);
-    addProcess(6, 5);
-    
     // Make accordion functional
     setupAccordion();
 });
@@ -75,28 +69,46 @@ function setupEventListeners() {
     
     // Process management
     document.getElementById('add-process-btn').addEventListener('click', () => {
+        const pid = document.getElementById('process-id').value.trim();
         const at = document.getElementById('arrival-time').value;
         const bt = document.getElementById('burst-time').value;
-        addProcess(at, bt);
+        const color = document.getElementById('process-color').value;
+        
+        addProcess(at, bt, pid || null, color);
     });
+    
+    // Only keep clear all button, remove import button
+    document.getElementById('clear-all-btn').addEventListener('click', clearAllProcesses);
     
     // Simulation controls
     document.getElementById('start-btn').addEventListener('click', toggleSimulation);
     document.getElementById('reset-btn').addEventListener('click', resetSimulation);
     
     // Speed control
-    document.getElementById('simulation-speed').addEventListener('input', (e) => {
+    const speedSlider = document.getElementById('simulation-speed');
+    speedSlider.addEventListener('input', (e) => {
         animationSpeed = e.target.value;
+        updateSpeedDisplay();
+        
         if (isSimulationRunning) {
             stopSimulation();
             startSimulation();
         }
     });
     
+    // Initialize speed display
+    updateSpeedDisplay();
+    
     // Dark mode toggle
     document.querySelector('.theme-toggle').addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
     });
+    
+    // Show empty states on load
+    toggleEmptyState();
+    
+    // Make sure the window object has the removeProcess function
+    window.removeProcess = removeProcess;
 }
 
 // Set up accordion functionality
@@ -149,23 +161,54 @@ function selectAlgorithm(algorithm) {
 }
 
 // Add a new process
-function addProcess(arrivalTime, burstTime) {
-    if (burstTime <= 0) {
-        alert('Burst time must be greater than 0');
+function addProcess(arrivalTime, burstTime, customPid = null, customColor = null) {
+    // Ensure burst time is a positive whole number
+    const bt = parseInt(burstTime);
+    if (isNaN(bt) || bt <= 0) {
+        alert('Burst time must be a positive whole number');
         return;
     }
     
-    const pid = `P${processIdCounter++}`;
-    const process = new Process(pid, arrivalTime, burstTime);
-    processes.push(process);
+    // Ensure arrival time is a non-negative whole number
+    const at = parseInt(arrivalTime);
+    if (isNaN(at) || at < 0) {
+        alert('Arrival time must be a non-negative whole number');
+        return;
+    }
     
+    // Use custom PID if provided, otherwise generate one
+    const pid = customPid || `P${processIdCounter++}`;
+    
+    // Check if PID already exists
+    if (processes.some(p => p.pid === pid)) {
+        alert(`Process with ID ${pid} already exists. Please use a different ID.`);
+        return;
+    }
+    
+    const process = new Process(pid, at, bt);
+    
+    // Use custom color if provided, otherwise ensure it's a unique color
+    if (customColor) {
+        process.color = customColor;
+    } else {
+        // Ensure unique colors for each process
+        const existingColors = processes.map(p => p.color);
+        while (existingColors.includes(process.color)) {
+            process.color = getRandomColor();
+        }
+    }
+    
+    processes.push(process);
     updateProcessTable();
-}
-
-// Remove a process
-function removeProcess(pid) {
-    processes = processes.filter(p => p.pid !== pid);
-    updateProcessTable();
+    
+    // Clear input fields
+    document.getElementById('process-id').value = '';
+    document.getElementById('arrival-time').value = '0';
+    document.getElementById('burst-time').value = '4';
+    document.getElementById('process-color').value = '#4a6fa5';
+    
+    // Hide empty state message if we have processes
+    toggleEmptyState();
 }
 
 // Update the process table
@@ -173,16 +216,92 @@ function updateProcessTable() {
     const tableBody = document.getElementById('process-table-body');
     tableBody.innerHTML = '';
     
+    if (processes.length === 0) {
+        document.getElementById('empty-processes-message').style.display = 'flex';
+        return;
+    }
+    
+    document.getElementById('empty-processes-message').style.display = 'none';
+    
     processes.forEach(process => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><span class="process-badge" style="background-color: ${process.color}">${process.pid}</span></td>
             <td>${process.at}</td>
             <td>${process.bt}</td>
-            <td><button class="action-btn" onclick="removeProcess('${process.pid}')"><i class="fas fa-trash-alt"></i></button></td>
+            <td>
+                <button class="action-btn" onclick="removeProcess('${process.pid}')"><i class="fas fa-trash-alt"></i></button>
+            </td>
         `;
         tableBody.appendChild(row);
     });
+}
+
+// Remove a process
+function removeProcess(pid) {
+    processes = processes.filter(p => p.pid !== pid);
+    updateProcessTable();
+    
+    // Show empty state if no processes
+    toggleEmptyState();
+    
+    // Reset simulation if it was running
+    if (isSimulationRunning) {
+        resetSimulation();
+    }
+}
+
+// Clear all processes
+function clearAllProcesses() {
+    if (processes.length === 0) return;
+    
+    if (confirm('Are you sure you want to clear all processes?')) {
+        processes = [];
+        updateProcessTable();
+        toggleEmptyState();
+        resetSimulation();
+    }
+}
+
+// Toggle empty state messages
+function toggleEmptyState() {
+    // Process list empty state
+    const emptyProcessesMessage = document.getElementById('empty-processes-message');
+    emptyProcessesMessage.style.display = processes.length === 0 ? 'flex' : 'none';
+    
+    // Gantt chart empty state
+    const emptyGanttMessage = document.getElementById('empty-gantt-message');
+    const ganttChart = document.getElementById('gantt-chart');
+    
+    if (processes.length === 0 || !isSimulationRunning) {
+        emptyGanttMessage.style.display = 'flex';
+    } else {
+        emptyGanttMessage.style.display = 'none';
+    }
+    
+    // Results empty state
+    const emptyResultsMessage = document.getElementById('empty-results-message');
+    const resultsTable = document.getElementById('results-table-body');
+    
+    if (resultsTable.children.length === 0) {
+        emptyResultsMessage.style.display = 'flex';
+    } else {
+        emptyResultsMessage.style.display = 'none';
+    }
+}
+
+// Update speed display
+function updateSpeedDisplay() {
+    const speedValue = document.getElementById('speed-value');
+    const speed = document.getElementById('simulation-speed').value;
+    
+    if (speed <= 3) {
+        speedValue.textContent = 'Slow';
+    } else if (speed <= 7) {
+        speedValue.textContent = 'Medium';
+    } else {
+        speedValue.textContent = 'Fast';
+    }
 }
 
 // Toggle simulation (start/stop)
@@ -254,15 +373,22 @@ function resetSimulation() {
 
 // Reset the Gantt chart
 function resetGanttChart() {
-    document.getElementById('gantt-chart').innerHTML = '';
+    document.getElementById('gantt-chart').innerHTML = `
+        <div class="empty-state-message" id="empty-gantt-message">
+            <i class="fas fa-chart-bar"></i>
+            <p>Add processes and run the simulation to see the Gantt chart</p>
+        </div>
+    `;
     document.getElementById('timeline').innerHTML = '';
     document.getElementById('avg-metrics').innerHTML = '<p>No data yet. Run the simulation to see results.</p>';
     resetResultsTable();
+    toggleEmptyState();
 }
 
 // Reset the results table
 function resetResultsTable() {
     document.getElementById('results-table-body').innerHTML = '';
+    toggleEmptyState();
 }
 
 // FCFS (First-Come, First-Served) Scheduling
@@ -515,8 +641,20 @@ function rrScheduling() {
         });
         
         // Update current time and remaining time
+        let previousTime = currentTime;
         currentTime += executionTime;
         p.rt -= executionTime;
+        
+        // Important: Check for new arrivals at EVERY time point during execution
+        for (let t = previousTime + 1; t <= currentTime; t++) {
+            // Check if any new processes arrived at this exact time point
+            for (let i = 0; i < n; i++) {
+                let proc = processesClone[i];
+                if (Math.abs(proc.at - t) < 0.001 && proc.rt > 0 && !queue.includes(proc) && proc !== p) {
+                    queue.push(proc);
+                }
+            }
+        }
         
         // Check if process is completed
         if (p.rt <= 0) {
@@ -524,6 +662,15 @@ function rrScheduling() {
             p.tat = p.ct - p.at;
             p.wt = p.tat - p.bt;
             completed++;
+            
+            // Critical fix: Check for processes arriving EXACTLY at completion time
+            for (let i = 0; i < n; i++) {
+                let proc = processesClone[i];
+                if (Math.abs(proc.at - currentTime) < 0.001 && proc.rt > 0 && !queue.includes(proc)) {
+                    // Process arrives exactly when another finishes - add to queue immediately
+                    queue.push(proc);
+                }
+            }
         } else {
             // Put back in queue if not complete, but first check for new arrivals
             // Add all processes that have arrived while this process was executing
@@ -582,8 +729,19 @@ function animateGanttChart(ganttData) {
     // Find the maximum end time for scaling
     const maxTime = Math.max(...ganttData.map(d => d.endTime));
     
-    // Create timeline markers
-    for (let t = 0; t <= maxTime; t += 2) {
+    // Create timeline markers with more precise intervals and better spacing
+    let timeInterval;
+    if (maxTime <= 10) {
+        timeInterval = 1; // 1 unit intervals for small charts
+    } else if (maxTime <= 30) {
+        timeInterval = 2; // 2 unit intervals for medium charts
+    } else if (maxTime <= 100) {
+        timeInterval = 5; // 5 unit intervals for larger charts
+    } else {
+        timeInterval = 10; // 10 unit intervals for very large charts
+    }
+    
+    for (let t = 0; t <= maxTime; t += timeInterval) {
         const marker = document.createElement('div');
         marker.className = 'timeline-marker';
         marker.style.left = `${(t / maxTime) * 100}%`;
@@ -597,8 +755,22 @@ function animateGanttChart(ganttData) {
         timeline.appendChild(label);
     }
     
+    // Add vertical grid lines for better readability
+    for (let t = 0; t <= maxTime; t += timeInterval) {
+        const gridLine = document.createElement('div');
+        gridLine.className = 'grid-line';
+        gridLine.style.left = `${(t / maxTime) * 100}%`;
+        ganttChart.appendChild(gridLine);
+    }
+    
+    // Add a current time indicator that moves with the animation
+    const timeIndicator = document.createElement('div');
+    timeIndicator.className = 'time-indicator';
+    ganttChart.appendChild(timeIndicator);
+    
     // Track the index of the current block being animated
     let currentIndex = 0;
+    let currentTime = 0;
     
     // Determine animation speed (lower values = faster animation)
     const speed = 1100 - (animationSpeed * 100); // Convert 1-10 scale to ms delay
@@ -615,6 +787,10 @@ function animateGanttChart(ganttData) {
         const width = ((data.endTime - data.startTime) / maxTime) * 100;
         const left = (data.startTime / maxTime) * 100;
         
+        // Update current time indicator
+        currentTime = data.startTime;
+        timeIndicator.style.left = `${(currentTime / maxTime) * 100}%`;
+        
         const block = document.createElement('div');
         block.className = 'gantt-block process-running';
         block.style.width = `${width}%`;
@@ -623,18 +799,45 @@ function animateGanttChart(ganttData) {
         block.style.backgroundColor = data.color;
         block.textContent = data.pid;
         
-        // Add tooltip
+        // Add enhanced tooltip with more detailed information
         const tooltip = document.createElement('div');
         tooltip.className = 'gantt-tooltip';
+        tooltip.style.display = 'none'; // Initially hidden
         tooltip.innerHTML = `
             <strong>${data.pid}</strong><br>
             Start: ${data.startTime}<br>
             End: ${data.endTime}<br>
-            Duration: ${data.endTime - data.startTime}
+            Duration: ${(data.endTime - data.startTime)}
         `;
         
-        block.appendChild(tooltip);
-        ganttChart.appendChild(block);
+        document.body.appendChild(tooltip); // Append to body for z-index priority
+        
+        // Update mouse events to show tooltip properly
+        block.addEventListener('mouseenter', (e) => {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX + 10) + 'px';
+            tooltip.style.top = (e.clientY - 80) + 'px';
+        });
+        
+        block.addEventListener('mousemove', (e) => {
+            tooltip.style.left = (e.clientX + 10) + 'px';
+            tooltip.style.top = (e.clientY - 80) + 'px';
+        });
+        
+        block.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+        
+        ganttChart.appendChild(block); // Append block to the gantt chart
+        
+        // Animate the time indicator moving from start to end of this block
+        const startPos = (data.startTime / maxTime) * 100;
+        const endPos = (data.endTime / maxTime) * 100;
+        const animationDuration = speed;
+        
+        // Create animation for time indicator
+        timeIndicator.style.transition = `left ${animationDuration}ms linear`;
+        timeIndicator.style.left = `${endPos}%`;
         
         currentIndex++;
         simulationInterval = setTimeout(animateBlock, speed);
@@ -699,9 +902,20 @@ function updateResults(processesData) {
 // Helper function to get a random color
 function getRandomColor() {
     const colors = [
-        '#4a6fa5', '#ff6b6b', '#4ecdc4', '#ff9f1c', '#6a0572', 
-        '#6f42c1', '#20bf55', '#fb8b24', '#3a86ff', '#ef476f',
-        '#118ab2', '#06d6a0', '#ffd166', '#073b4c', '#7209b7'
+        '#ff6b6b', '#4ecdc4', '#ffa62b', '#8a5cf5', 
+        '#20bf55', '#f72585', '#3a86ff', '#fb8b24',
+        '#6a0572', '#6f42c1', '#118ab2', '#06d6a0'
     ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    
+    // Get colors that aren't already used
+    const usedColors = processes.map(p => p.color);
+    const availableColors = colors.filter(c => !usedColors.includes(c));
+    
+    // If all colors are used, return a random one from the original array
+    if (availableColors.length === 0) {
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    // Otherwise return a random unused color
+    return availableColors[Math.floor(Math.random() * availableColors.length)];
 }

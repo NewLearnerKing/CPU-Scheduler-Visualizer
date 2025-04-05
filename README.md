@@ -58,15 +58,6 @@ An algorithm designed for time-sharing systems. Each process is assigned a fixed
 - Any modern web browser (Chrome, Firefox, Safari, Edge)
 - No server or special software installation required
 
-## Suggested Project Names
-
-While "CPU Scheduler Visualizer" is the current name, here are some other options:
-
-- ScheduleViz
-- CPUSim Pro
-- VisualCPU Scheduler
-- ProcessFlow Visualizer
-- AlgoScheduler
 
 ## Educational Value
 
